@@ -9,7 +9,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     id      = models.UUIDField(primary_key=True,default=uuid4,editable=False,unique=True)
     name    = models.CharField(max_length=25, blank=False)
     token = models.CharField(max_length=64, unique=True)
-    website = models.URLField(max_length=255,blank=True)
+    website = models.URLField(max_length=255,blank=True, default = None, null=True)
     password = models.CharField(max_length=128, null=False)
     is_staff = models.BooleanField(default=False) 
     is_superuser = models.BooleanField(default=False)
