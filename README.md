@@ -15,6 +15,21 @@ Install DataPushAPI-Project
   cd  DataPushAPI/base/
 ```
 
+**This Project use Redis and Celery for Task Queue**
+
+**Setup Redis**
+```shell
+    sudo apt update
+    sudo apt install redis
+```
+
+**Run Redis Server**
+```shell
+  redis-server
+```
+___
+
+
 Before Proceeding Further Meke sure your in "DataPushAPI/base/" directory
 
 #### create virtual environment
@@ -30,21 +45,6 @@ Before Proceeding Further Meke sure your in "DataPushAPI/base/" directory
   pip install -r requirements.txt
 ```
 ___
-
-**This Project use Redis and Celery for Task Queue**
-
-**Setup Redis**
-```shell
-    sudo apt update
-    sudo apt install redis
-```
-
-**Run Redis Server**
-```shell
-  redis-server
-```
-___
-
 
 **DataPushAPI Database Migrations**
 ```shell
