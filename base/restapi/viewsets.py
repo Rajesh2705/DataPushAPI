@@ -3,7 +3,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotFound
 from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from users.models import CustomUser
 from destination.models import Destination, Header
@@ -84,10 +86,25 @@ class DestinationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        headers_data = request.data.get('headers', [])
+        destination = serializer.save()
+
+        for header_dict in headers_data:
+            key = header_dict.get('key')
+            value = header_dict.get('value')
+            Header.objects.create(destination=destination, key=key, value=value)
+
+        headers = destination.headers.values('key', 'value')
+        return Response({'destination': serializer.data, 'headers': headers}, status=status.HTTP_201_CREATED)
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        headers = instance.headers.values('key', 'value')
+        return Response({'destination': serializer.data, 'headers': headers})
 
 class HeaderViewSet(viewsets.ModelViewSet):
     queryset = Header.objects.all()
@@ -98,8 +115,21 @@ class HeaderViewSet(viewsets.ModelViewSet):
         return Header.objects.filter(destination__user=self.request.user)
 
     def perform_create(self, serializer):
-        destination = Destination.objects.get(
-            user=self.request.user,
-            id=self.request.data.get('destination')
-        )
+        destination_id = self.request.data.get('destination')
+        destination = get_object_or_404(Destination, id=destination_id, user=self.request.user)
         serializer.save(destination=destination)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        headers_data = request.data.get('headers', [])
+        try:
+            destination = get_object_or_404(Destination, id=request.data.get('destination'), user=self.request.user)
+            for header_dict in headers_data:
+                key = header_dict.get('key')
+                value = header_dict.get('value')
+                Header.objects.create(destination=destination, key=key, value=value)
+            headers = destination.headers.values('key', 'value')
+            return Response(headers, status=status.HTTP_201_CREATED)
+        except NotFound:
+            return Response({'error': 'Destination not found.'}, status=status.HTTP_404_NOT_FOUND)
