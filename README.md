@@ -57,7 +57,7 @@ ___
 ### Run Application
 run the below command and start celery task queue server in backround
 ```shell
-  python -m celery -A celery_app worker
+  python -m celery -A base worker
 ```
 **open new terminal** and run following command to start DataPushAPI application
 
